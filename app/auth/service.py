@@ -49,11 +49,13 @@ class AuthService:
     async def verify_otp(self, email: str, otp: str, purpose: str, db: AsyncSession) -> dict:
         email = email.lower().strip()
 
+        # Auto-detect: pick the latest unused OTP regardless of purpose, then
+        # route by whether the user exists. This avoids signup/login mismatches
+        # when the frontend can't know which purpose /send-otp used.
         result = await db.execute(
             select(OTPRecord)
             .where(
                 OTPRecord.email == email,
-                OTPRecord.purpose == purpose,
                 OTPRecord.is_used == False,  # noqa: E712
             )
             .order_by(OTPRecord.created_at.desc())
@@ -61,6 +63,8 @@ class AuthService:
         record = result.scalar_one_or_none()
         if not record:
             raise HTTPException(404, "No active OTP — request a new one")
+
+        purpose = record.purpose
 
         if record.expires_at < datetime.utcnow():
             raise HTTPException(410, "OTP has expired")
