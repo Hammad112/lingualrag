@@ -7,6 +7,7 @@ from uuid import uuid4
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import (
     Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, MatchAny,
+    PayloadSchemaType,
 )
 
 from app.config import settings
@@ -54,6 +55,22 @@ def init_collection():
             vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
         )
         logger.info("Created Qdrant collection %s (dim=%d)", name, dim)
+
+    # Payload indexes required for filtered search on these fields.
+    # Skip fields that already have an index — Qdrant 400s on duplicate creates.
+    existing_indexes = set((client.get_collection(name).payload_schema or {}).keys())
+    for field in ("user_id", "doc_id"):
+        if field in existing_indexes:
+            continue
+        try:
+            client.create_payload_index(
+                collection_name=name,
+                field_name=field,
+                field_schema=PayloadSchemaType.KEYWORD,
+            )
+            logger.info("Created Qdrant payload index for %s", field)
+        except Exception as e:
+            logger.warning("Failed to create payload index for %s: %s", field, e)
 
 
 async def upsert_chunks(
