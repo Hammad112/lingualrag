@@ -29,8 +29,9 @@ class Settings(BaseSettings):
     QDRANT_PATH: str = "./qdrant_data"
     QDRANT_COLLECTION: str = "lingualrag_chunks"
 
-    EMBEDDING_MODEL: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-    EMBEDDING_DIM: int = 384
+    EMBEDDING_MODEL: str = "text-embedding-004"
+    EMBEDDING_DIM: int = 768
+    GEMINI_API_KEY: str = ""
     HF_API_TOKEN: str = ""
 
     GROQ_API_KEY: str = ""

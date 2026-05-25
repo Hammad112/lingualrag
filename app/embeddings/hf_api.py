@@ -13,7 +13,7 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-_HF_BASE = "https://api-inference.huggingface.co/pipeline/feature-extraction"
+_HF_BASE = "https://router.huggingface.co/hf-inference/pipeline/feature-extraction"
 
 
 async def embed_texts_hf(texts: List[str]) -> List[List[float]]:

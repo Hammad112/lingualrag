@@ -33,13 +33,27 @@ def get_client() -> QdrantClient:
 
 def init_collection():
     client = get_client()
+    name = settings.QDRANT_COLLECTION
+    dim = settings.EMBEDDING_DIM
     collections = [c.name for c in client.get_collections().collections]
-    if settings.QDRANT_COLLECTION not in collections:
+
+    if name in collections:
+        info = client.get_collection(name)
+        existing_dim = info.config.params.vectors.size
+        if existing_dim != dim:
+            logger.warning(
+                "Qdrant collection %s has dim=%d but EMBEDDING_DIM=%d. Recreating (existing vectors will be lost).",
+                name, existing_dim, dim,
+            )
+            client.delete_collection(name)
+            collections.remove(name)
+
+    if name not in collections:
         client.create_collection(
-            collection_name=settings.QDRANT_COLLECTION,
-            vectors_config=VectorParams(size=settings.EMBEDDING_DIM, distance=Distance.COSINE),
+            collection_name=name,
+            vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
         )
-        logger.info("Created Qdrant collection: %s", settings.QDRANT_COLLECTION)
+        logger.info("Created Qdrant collection %s (dim=%d)", name, dim)
 
 
 async def upsert_chunks(
