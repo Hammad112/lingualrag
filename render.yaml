@@ -1,0 +1,86 @@
+# Render Blueprint — deploys LingualRAG backend + free Postgres in one click.
+# Push this repo to GitHub, then:
+#   Render dashboard → New → Blueprint → connect repo.
+# Fill in the env vars marked `sync: false` in the dashboard.
+services:
+  - type: web
+    name: lingualrag-backend
+    env: python
+    plan: free
+    region: oregon
+    rootDir: Backend
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+
+      # DB — auto-wired from the database block below
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lingualrag-db
+          property: connectionString
+
+      # Embeddings — HuggingFace Inference API (free, no local RAM)
+      - key: EMBEDDING_MODEL
+        value: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      - key: EMBEDDING_DIM
+        value: "384"
+      - key: HF_API_TOKEN
+        sync: false           # paste your token in the Render dashboard
+
+      # Vector store — Qdrant Cloud (free 1GB cluster)
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: QDRANT_COLLECTION
+        value: lingualrag_chunks
+
+      # LLM (free Groq)
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+
+      # Auth / JWT
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "30"
+
+      # OTP — defaults to console-only; set RESEND_API_KEY for real emails
+      - key: OTP_PRINT_TO_CONSOLE
+        value: "true"
+      - key: OTP_LENGTH
+        value: "6"
+      - key: OTP_EXPIRE_MINUTES
+        value: "10"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: noreply@lingualrag.app
+
+      # Render-friendly: no local file persistence, no local Qdrant
+      - key: PERSIST_UPLOADS
+        value: "false"
+
+      # Tighten this once your Vercel domain is known
+      - key: BACKEND_CORS_ORIGINS
+        value: '["https://lingualrag.vercel.app","http://localhost:3000","http://localhost:3001"]'
+
+databases:
+  - name: lingualrag-db
+    plan: free
+    databaseName: lingualrag
+    user: lingualrag

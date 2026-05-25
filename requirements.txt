@@ -1,0 +1,37 @@
+# =============================================================
+# Production requirements — fits Render free tier (512MB RAM)
+# Embeddings happen on HuggingFace Inference API, not locally.
+# =============================================================
+
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.2
+pydantic-settings==2.6.1
+
+# DB
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+asyncpg==0.30.0
+greenlet==3.1.1
+
+# Auth / misc
+python-multipart==0.0.19
+python-jose[cryptography]==3.3.0
+email-validator==2.2.0
+httpx==0.28.1
+aiofiles==24.1.0
+
+# Vector store
+qdrant-client==1.12.1
+numpy==1.26.4
+
+# Text extraction
+pypdf==5.1.0
+python-docx==1.1.2
+
+# Search
+rank-bm25==0.2.2
+langdetect==1.0.9
+
+# LLM
+groq==0.13.0
