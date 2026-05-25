@@ -57,6 +57,13 @@ async def validation_handler(_, exc):
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request, exc):
+    log.exception("Unhandled error on %s %s", request.method, request.url.path)
+    detail = str(exc) if settings.DEBUG else "Internal server error"
+    return JSONResponse(status_code=500, content={"detail": detail, "type": type(exc).__name__})
+
+
 @app.get("/")
 async def root():
     return {"app": settings.APP_NAME, "status": "ok"}

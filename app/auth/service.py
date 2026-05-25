@@ -59,8 +59,9 @@ class AuthService:
                 OTPRecord.is_used == False,  # noqa: E712
             )
             .order_by(OTPRecord.created_at.desc())
+            .limit(1)
         )
-        record = result.scalar_one_or_none()
+        record = result.scalars().first()
         if not record:
             raise HTTPException(404, "No active OTP — request a new one")
 
@@ -79,16 +80,16 @@ class AuthService:
 
         record.is_used = True
 
-        if purpose == "signup":
+        r = await db.execute(select(User).where(User.email == email))
+        user = r.scalar_one_or_none()
+
+        if purpose == "signup" and not user:
             meta = json.loads(record.metadata_json or "{}")
             user = User(email=email, full_name=meta.get("full_name") or email.split("@")[0])
             db.add(user)
             await db.flush()
-        else:
-            r = await db.execute(select(User).where(User.email == email))
-            user = r.scalar_one_or_none()
-            if not user:
-                raise HTTPException(404, "User not found")
+        elif not user:
+            raise HTTPException(404, "User not found")
 
         if not user.is_active:
             raise HTTPException(403, "Account disabled")
