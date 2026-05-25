@@ -1,10 +1,13 @@
 """End-to-end chat pipeline: detect lang → embed → dense+BM25 → RRF → LLM stream → persist."""
+import logging
 import time
 import uuid
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
+
+logger = logging.getLogger(__name__)
 
 from app.config import settings
 from app.chat.models import ChatSession, Message
@@ -165,7 +168,8 @@ class ChatService:
 
             yield {"type": "done", "data": {"language": query_lang, "latency_ms": latency, "session_id": session_id}}
         except Exception as e:
-            yield {"type": "error", "data": str(e)}
+            logger.exception("Chat pipeline error for user=%s session=%s", user_id, session_id)
+            yield {"type": "error", "data": f"{type(e).__name__}: {e}"}
 
     async def _save_exchange(
         self, session_id, user_query, assistant_response, query_lang,
