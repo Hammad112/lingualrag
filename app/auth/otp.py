@@ -44,6 +44,11 @@ async def send_otp_email(email: str, otp: str, purpose: str) -> None:
                 },
             )
             if r.status_code >= 400:
-                logger.warning("Resend send failed: %s %s", r.status_code, r.text)
+                logger.error(
+                    "Resend send FAILED (%s) from=%s to=%s body=%s",
+                    r.status_code, settings.EMAIL_FROM, email, r.text,
+                )
+            else:
+                logger.info("Resend email sent to %s (id=%s)", email, r.json().get("id"))
     except Exception as e:
-        logger.warning("Email send error: %s", e)
+        logger.error("Email send error: %s", e, exc_info=True)
