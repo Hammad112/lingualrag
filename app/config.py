@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     STORAGE_DIR: str = "./storage"
 
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    BACKEND_CORS_ORIGIN_REGEX: str = ""
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
