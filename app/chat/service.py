@@ -117,7 +117,7 @@ class ChatService:
             query_lang = detect_language_safe(query)
 
             # 1. Embed query
-            qvecs = await embed_texts([query])
+            qvecs = await embed_texts([query], task_type="RETRIEVAL_QUERY")
             qvec = qvecs[0]
 
             # 2. Dense retrieval

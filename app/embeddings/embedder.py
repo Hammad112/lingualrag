@@ -25,7 +25,7 @@ def warm_up():
         )
 
 
-async def embed_texts(texts: List[str]) -> List[List[float]]:
+async def embed_texts(texts: List[str], task_type: str = "RETRIEVAL_DOCUMENT") -> List[List[float]]:
     if not texts:
         return []
-    return await embed_texts_gemini(texts)
+    return await embed_texts_gemini(texts, task_type=task_type)

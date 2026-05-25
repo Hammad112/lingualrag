@@ -1,7 +1,7 @@
 """Gemini (Google AI Studio) embeddings.
 
 Free tier: very generous (effectively unlimited for indie/small-scale use).
-Model: text-embedding-004 → 768-dimensional vectors, multilingual.
+Model: gemini-embedding-001 (3072-dim native, configurable down to 768).
 Docs: https://ai.google.dev/gemini-api/docs/embeddings
 """
 import logging
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 _BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 
-async def embed_texts_gemini(texts: List[str]) -> List[List[float]]:
+async def embed_texts_gemini(texts: List[str], task_type: str = "RETRIEVAL_DOCUMENT") -> List[List[float]]:
     if not texts:
         return []
     if not settings.GEMINI_API_KEY:
@@ -32,6 +32,8 @@ async def embed_texts_gemini(texts: List[str]) -> List[List[float]]:
             {
                 "model": f"models/{model}",
                 "content": {"parts": [{"text": t}]},
+                "outputDimensionality": settings.EMBEDDING_DIM,
+                "taskType": task_type,
             }
             for t in texts
         ]
